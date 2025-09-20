@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Maths Exam</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; text-align: center; }
+    .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #aaa; max-width: 800px; margin: auto; }
+    #timer { font-size: 20px; font-weight: bold; color: red; margin-bottom: 15px; text-align: center; }
+    #question { font-size: 18px; margin-bottom: 10px; }
+    input[type=text] { width: 80%; padding: 8px; margin-bottom: 10px; }
+    button { padding: 10px 15px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background: #f2f2f2; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <!-- Name Screen -->
+  <div class="card" id="nameScreen">
+    <h1>Maths Exam</h1>
+    <p>Enter Student Name:</p>
+    <input type="text" id="studentName" placeholder="Your name">
+    <br>
+    <button onclick="startExam()">Start Exam</button>
+  </div>
+
+  <!-- Exam Screen -->
+  <div class="card hidden" id="examScreen">
+    <h2 id="welcome"></h2>
+    <div id="timer"></div>
+    <div id="question"></div>
+    <input type="text" id="answer" placeholder="Type your answer here">
+    <br>
+    <button onclick="checkAnswer()">Submit Answer</button>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const questions = [
+      // Fish Tale
+      { q: "Write the number name for 5,23,47,289", a: "Five crore twenty-three lakh forty-seven thousand two hundred eighty-nine" },
+      { q: "In 6,73,452, the digit 7 is underlined. Write its place, place value, and face value.", a: "Ten-thousands, 70000, 7" },
+      { q: "Arrange in ascending order: 9,45,672; 6,23,981; 12,34,567; 7,11,110", a: "6,23,981 < 7,11,110 < 9,45,672 < 12,34,567" },
+      { q: "Predecessor and Successor of 10,00,000", a: "9,99,999 and 10,00,001" },
+      { q: "Form the greatest and smallest 7-digit numbers using digits 3,0,5,9,2,7,1", a: "Greatest = 9753210, Smallest = 1023579" },
+      { q: "A city has 12,48,560 people. 7,39,842 left. How many remain?", a: "508718" },
+      { q: "A factory produces 85,640 pencils in a day. In 365 days?", a: "31258600" },
+      { q: "Compare: Which is greater, 7,52,439 or 75,243?", a: "7,52,439" },
+      { q: "Find the face value and place value of 9 in 9,87,654", a: "Face value = 9, Place value = 900000" },
+      { q: "Write the predecessor of 1,00,00,000", a: "9999999" },
+
+      // Shapes & Angles
+      { q: "Draw an angle of 30° (Teacher will check)", a: "Teacher checked" },
+      { q: "Which is a right angle: 90°, 120°, 75°?", a: "90°" },
+      { q: "Classify: 45° (___), 90° (___), 150° (___)", a: "Acute, Right, Obtuse" },
+      { q: "Draw an angle of 120° (Teacher will check)", a: "Teacher checked" },
+      { q: "Which angle is obtuse: 45°, 120°, 80°?", a: "120°" },
+      { q: "Which shape has all sides equal and all angles right?", a: "Square" },
+      { q: "How many lines of symmetry does a rectangle have?", a: "2" },
+
+      // Multiplication Word Problems
+      { q: "A bus has 52 seats. How many seats in 125 buses?", a: "6500" },
+      { q: "A book costs ₹245. Cost of 432 books?", a: "105840" },
+      { q: "One packet has 48 chocolates. How many chocolates in 250 packets?", a: "12000" },
+      { q: "A pen costs ₹18. What is the cost of 999 pens?", a: "17982" },
+
+      // Division Word Problems
+      { q: "8640 apples packed in 36 boxes. Apples per box?", a: "240" },
+      { q: "12500 kg wheat packed in 25kg bags. Bags needed?", a: "500" },
+      { q: "A rope of 960 m is cut into 24 equal pieces. Length of each piece?", a: "40" },
+      { q: "Rs. 12,600 is equally distributed among 28 students. How much each gets?", a: "450" }
+    ];
+
+    let current = 0, score = 0;
+    let answers = [];
+    let totalTime = 60 * 60; // 1 hour in seconds
+    let countdown;
+
+    function startExam() {
+      const name = document.getElementById("studentName").value.trim();
+      if (name === "") {
+        alert("Please enter your name!");
+        return;
+      }
+      document.getElementById("nameScreen").classList.add("hidden");
+      document.getElementById("examScreen").classList.remove("hidden");
+      document.getElementById("welcome").innerText = "Welcome, " + name + "!";
+      loadQuestion();
+      startTimer();
+    }
+
+    function startTimer() {
+      let timer = document.getElementById("timer");
+      countdown = setInterval(() => {
+        let minutes = Math.floor(totalTime / 60);
+        let seconds = totalTime % 60;
+        timer.textContent = `⏰ Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+        if (totalTime <= 0) {
+          clearInterval(countdown);
+          alert("⏰ Time's up! Your exam is over.");
+          showResult();
+        }
+        totalTime--;
+      }, 1000);
+    }
+
+    function loadQuestion() {
+      if (current < questions.length) {
+        document.getElementById("question").innerText = questions[current].q;
+        document.getElementById("answer").value = "";
+      } else {
+        showResult();
+      }
+    }
+
+    function checkAnswer() {
+      let ans = document.getElementById("answer").value.trim();
+      const correct = questions[current].a;
+      let status = "❌ Wrong";
+
+      if (correct.toLowerCase() === "teacher checked") {
+        status = "✔ Checked by Teacher";
+      } else {
+        let correctNumbers = correct.match(/\d+/g);
+        let ansNumbers = ans.match(/\d+/g);
+        if (correctNumbers && ansNumbers && correctNumbers.length === ansNumbers.length) {
+          let allMatch = correctNumbers.every((num, i) => parseInt(num) === parseInt(ansNumbers[i]));
+          if (allMatch) { score++; status = "✅ Correct"; }
+        } else {
+          let ansNum = parseFloat(ans.replace(/,/g, ''));
+          let correctNum = parseFloat(correct.replace(/,/g, ''));
+          if (!isNaN(ansNum) && !isNaN(correctNum) && ansNum === correctNum) {
+            score++; status = "✅ Correct";
+          } else if (ans.toLowerCase().replace(/\s+/g, '') === correct.toLowerCase().replace(/\s+/g, '')) {
+            score++; status = "✅ Correct";
+          }
+        }
+      }
+
+      answers.push({ q: questions[current].q, ans: ans, correct: correct, status: status });
+      current++;
+      loadQuestion();
+    }
+
+    function showResult() {
+      clearInterval(countdown);
+      let res = `<h2>Exam Finished</h2>`;
+      res += `<p>Your Score: ${score} / ${questions.length}</p>`;
+      res += `<table><tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th><th>Status</th></tr>`;
+      answers.forEach(a => {
+        res += `<tr><td>${a.q}</td><td>${a.ans}</td><td>${a.correct}</td><td>${a.status}</td></tr>`;
+      });
+      res += "</table>";
+      document.getElementById("result").innerHTML = res;
+      document.getElementById("question").style.display = "none";
+      document.getElementById("answer").style.display = "none";
+    }
+  </script>
+</body>
+</html>
