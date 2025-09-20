@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Maths Exam</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; background: #f9f9f9; text-align: center; }
+  .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 0 10px #aaa; max-width: 800px; margin: auto; }
+  #timer { font-size: 20px; font-weight: bold; color: red; margin-bottom: 15px; text-align: center; }
+  #question { font-size: 18px; margin-bottom: 10px; }
+  input[type=text] { width: 80%; padding: 8px; margin-bottom: 10px; }
+  button { padding: 10px 15px; font-size: 16px; cursor: pointer; border-radius: 5px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+  th, td { border: 1px solid #ddd; padding: 8px; }
+  th { background: #f2f2f2; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- Name & Roll Number Screen -->
+<div class="card" id="nameScreen">
+  <h1>Maths Exam</h1>
+  <p>Enter Student Name:</p>
+  <input type="text" id="studentName" placeholder="Your name">
+  <p>Enter Roll Number:</p>
+  <input type="text" id="rollNumber" placeholder="Your roll number">
+  <br>
+  <button onclick="startExam()">Start Exam</button>
+</div>
+
+<!-- Exam Screen -->
+<div class="card hidden" id="examScreen">
+  <h2 id="welcome"></h2>
+  <div id="timer"></div>
+  <div id="question"></div>
+  <input type="text" id="answer" placeholder="Type your answer here">
+  <br>
+  <button onclick="checkAnswer()">Submit Answer</button>
+  <div id="result"></div>
+</div>
+
+<script>
+const questions = [
+  // Chapter 1: Numbers / Place Value
+  {q:"Write the number name for 4,57,682",a:"Four lakh fifty-seven thousand six hundred eighty-two"},
+  {q:"Write the successor of 99,999",a:"100000"},
+  {q:"Find the predecessor of 5,00,001",a:"500000"},
+  {q:"Compare and write greater: 3,45,678 or 34,567",a:"345678"},
+  {q:"Write the place value of 7 in 2,73,914",a:"70000"},
+  {q:"Write the face value of 9 in 9,48,362",a:"9"},
+  {q:"Arrange in ascending order: 4,23,567; 3,45,678; 5,67,890",a:"345678 < 423567 < 567890"},
+  {q:"Form the greatest 6-digit number using digits 1,3,5,7,8,0",a:"875310"},
+  {q:"Form the smallest 6-digit number using digits 1,3,5,7,8,0",a:"103578"},
+  {q:"Find the sum: 2,34,567 + 3,45,678",a:"580245"},
+
+  // Chapter 2: Shapes & Angles
+  {q:"Draw a right angle (Teacher will check)",a:"Teacher checked"},
+  {q:"Which is an acute angle: 30°, 90°, 120°?",a:"30°"},
+  {q:"Classify: 70° (___), 90° (___), 130° (___)",a:"Acute, Right, Obtuse"},
+  {q:"Draw an obtuse angle of 120° (Teacher will check)",a:"Teacher checked"},
+  {q:"Which shape has 4 equal sides but angles not 90°?",a:"Rhombus"},
+  {q:"How many lines of symmetry does an equilateral triangle have?",a:"3"},
+  {q:"Which angle is reflex: 190°, 80°, 90°?",a:"190°"},
+
+  // Chapter 3: Multiplication Word Problems
+  {q:"A pen costs ₹15. Cost of 325 pens?",a:"4875"},
+  {q:"A packet has 24 pencils. How many in 48 packets?",a:"1152"},
+  {q:"A car travels 65 km in one hour. Distance in 12 hours?",a:"780"},
+  {q:"A notebook costs ₹45. Cost of 78 notebooks?",a:"3510"},
+  {q:"One box has 36 chocolates. How many chocolates in 125 boxes?",a:"4500"},
+
+  // Chapter 4: Division Word Problems
+  {q:"1440 apples are packed in 24 boxes. Apples per box?",a:"60"},
+  {q:"7500 kg rice packed in 25kg bags. Bags needed?",a:"300"},
+  {q:"A rope 1200 m is cut into 30 equal pieces. Length of each?",a:"40"},
+  {q:"Rs. 15,000 distributed among 25 students. Amount each?",a:"600"},
+  {q:"480 books divided equally among 16 shelves. Books per shelf?",a:"30"},
+
+  // Chapter 5: Can You See the Pattern?
+  {q:"Find the next number: 2, 4, 8, 16, ___",a:"32"},
+  {q:"Find the next number: 5, 10, 20, 40, ___",a:"80"},
+  {q:"Find the missing number: 3, 6, 12, ___, 48",a:"24"},
+  {q:"Find the next number: 1, 4, 9, 16, ___",a:"25"},
+  {q:"Complete the pattern: 2, 6, 12, 20, ___",a:"30"},
+  {q:"Find the next number: 10, 20, 30, 40, ___",a:"50"},
+  {q:"Complete the series: 1, 1, 2, 3, 5, ___",a:"8"},
+  {q:"Find the missing number: 2, 3, 5, 8, ___",a:"12"},
+  {q:"Next in series: 7, 14, 28, 56, ___",a:"112"},
+  {q:"Complete: 1, 2, 4, 7, 11, ___",a:"16"},
+  {q:"Find the next number: 100, 90, 80, ___, 60",a:"70"},
+  {q:"Complete: 5, 10, 20, 40, ___, 160",a:"80"},
+  {q:"Next in pattern: 1, 3, 6, 10, ___",a:"15"}
+];
+
+let current=0,score=0;
+let answers=[];
+let totalTime=90*60; // 1 hr 30 min
+let countdown;
+
+function startExam(){
+  const name=document.getElementById("studentName").value.trim();
+  const roll=document.getElementById("rollNumber").value.trim();
+  if(name==="" || roll===""){ alert("Please enter Name and Roll Number"); return; }
+  document.getElementById("nameScreen").classList.add("hidden");
+  document.getElementById("examScreen").classList.remove("hidden");
+  document.getElementById("welcome").innerText="Welcome, "+name+" (Roll No: "+roll+")!";
+  loadQuestion();
+  startTimer();
+}
+
+function startTimer(){
+  let timer=document.getElementById("timer");
+  countdown=setInterval(()=>{
+    let minutes=Math.floor(totalTime/60);
+    let seconds=totalTime%60;
+    timer.textContent=`⏰ Time Left: ${minutes}:${seconds<10?'0':''}${seconds}`;
+    if(totalTime<=0){
+      clearInterval(countdown);
+      alert("⏰ Time's up! Your exam is over.");
+      showResult();
+    }
+    totalTime--;
+  },1000);
+}
+
+function loadQuestion(){
+  if(current<questions.length){
+    document.getElementById("question").innerText=questions[current].q;
+    document.getElementById("answer").value="";
+  } else showResult();
+}
+
+function checkAnswer(){
+  let ans=document.getElementById("answer").value.trim();
+  const correct=questions[current].a;
+  let status="❌ Wrong";
+  if(correct.toLowerCase()==="teacher checked") status="✔ Checked by Teacher";
+  else{
+    let correctNumbers=correct.match(/\d+/g);
+    let ansNumbers=ans.match(/\d+/g);
+    if(correctNumbers && ansNumbers && correctNumbers.length===ansNumbers.length){
+      let allMatch=correctNumbers.every((num,i)=>parseInt(num)===parseInt(ansNumbers[i]));
+      if(allMatch){ score++; status="✅ Correct"; }
+    } else{
+      let ansNum=parseFloat(ans.replace(/,/g,''));
+      let correctNum=parseFloat(correct.replace(/,/g,''));
+      if(!isNaN(ansNum) && !isNaN(correctNum) && ansNum===correctNum){ score++; status="✅ Correct"; }
+      else if(ans.toLowerCase().replace(/\s+/g,'')===correct.toLowerCase().replace(/\s+/g,'')){ score++; status="✅ Correct"; }
+    }
+  }
+  answers.push({q:questions[current].q,ans:ans,correct:correct,status:status});
+  current++;
+  loadQuestion();
+}
+
+function showResult(){
+  clearInterval(countdown);
+  let res=`<h2>Exam Finished</h2>`;
+  res+=`<p>Your Score: ${score} / ${questions.length}</p>`;
+  res+=`<table><tr><th>Question</th><th>Your Answer</th><th>Correct Answer</th><th>Status</th></tr>`;
+  answers.forEach(a=>{ res+=`<tr><td>${a.q}</td><td>${a.ans}</td><td>${a.correct}</td><td>${a.status}</td></tr>`; });
+  res+="</table>";
+  document.getElementById("result").innerHTML=res;
+  document.getElementById("question").style.display="none";
+  document.getElementById("answer").style.display="none";
+}
+</script>
+</body>
+</html>
